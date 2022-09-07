@@ -1,9 +1,12 @@
 name: CI
 on:
   push:
-    branches: [main, master]
+    branches: [main]
     tags: ["*"]
   pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
@@ -12,25 +15,19 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.0'
+          - '1.6'
           - '1' # automatically expands to the latest stable 1.x release of Julia
           - nightly
         os:
           - ubuntu-latest
+          - macOS-latest
+          - windows-latest
         arch:
           - x64
-          - x86
         include:
-          # test macOS and Windows with latest Julia only
-          - os: macOS-latest
-            arch: x64
-            version: 1
           - os: windows-latest
-            arch: x64
-            version: 1
-          - os: windows-latest
+            version: '1'
             arch: x86
-            version: 1
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
